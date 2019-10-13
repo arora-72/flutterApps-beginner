@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 
 
@@ -38,7 +40,7 @@ class ChatScreen extends StatefulWidget{
 }
 
 
-class ChatScreenState extends State<ChatScreen>{
+class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin{
   final List<ChatMessage> _messages = <ChatMessage>[];
   final TextEditingController _textController = new TextEditingController();
   @override
@@ -66,7 +68,14 @@ class ChatScreenState extends State<ChatScreen>{
     );
   }
 
-  
+  //dispose
+  void dispose(){
+    for(ChatMessage message in _messages){
+      message.animationController.dispose();
+    }
+    super.dispose();
+  }
+
   //textController widget
   Widget _buildTextComposer(){
     return new IconTheme(data: new IconThemeData(color: Theme.of(context).accentColor),
@@ -95,25 +104,37 @@ class ChatScreenState extends State<ChatScreen>{
     _textController.clear();
     ChatMessage message = new ChatMessage(
       text: text,
+      animationController: new AnimationController(
+          vsync: this,
+        duration: new Duration(milliseconds: 700),
+      ),
     );
     setState(() {
       _messages.insert(0, message);
     });
+    message.animationController.forward();
   }
 }
 
 
 class ChatMessage extends StatelessWidget{
-  ChatMessage({this.text});
+  ChatMessage({this.text, this.animationController});
   final String text;
+  final AnimationController animationController;
 
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    return new Container(
+    return new FadeTransition(
+      opacity: animationController,
+        alwaysIncludeSemantics: true,
+        //key: ,
+        //sizeFactor: new CurvedAnimation(parent: animationController, curve: Curves.easeInOut),
+      //axisAlignment: 0.0,
+      child: new Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       child: new Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: <Widget>[
           new Container(
             margin: const EdgeInsets.only(right: 6.0),
@@ -131,6 +152,7 @@ class ChatMessage extends StatelessWidget{
           )
         ],
       ),
+    ),
     );
   }
 }
